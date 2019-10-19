@@ -21,12 +21,23 @@ def create_app(test_config=None):
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
     return response 
   
+  def paginate_questions(request):
+    page = request.args.get('page', 1, type=int)
+    start = (page-1)*QUESTIONS_PER_PAGE
+    end = start+QUESTIONS_PER_PAGE
+    questions = Question.query.all()
+    return questions[start:end]
+
+  def format_data(items):
+    formatted_items = [item.format() for item in items]
+    return formatted_items
 
   @app.route('/categories')
   def categories():
     categories = Category.query.all()
-    formatted_categories = [cat.format() for cat in categories]
+    formatted_categories = format_data(categories)
     return jsonify({
+      'success': True,
       'categories': formatted_categories
     })
 
@@ -43,6 +54,31 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
+  @app.route('/questions')
+  def get_questions():
+    questions = paginate_questions(request)
+    if len(questions) == 0:
+      abort(404)
+    
+    # format questions
+    formatted_questions = format_data(questions)
+    
+    # get categories
+    categories = Category.query.all()
+    formatted_categories = [(category.id, category.type) for category in categories]
+
+    total_question = len(Question.query.all())
+
+    current_category = list(set([ques['category'] for ques in formatted_questions]))
+
+    return jsonify({
+      'success': True,
+      'questions': formatted_questions,
+      'total_questions': total_question,
+      'categories': formatted_categories,
+      'current_category': current_category
+    })
+
 
   '''
   @TODO: 
