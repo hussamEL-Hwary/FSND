@@ -82,6 +82,19 @@ def create_app(test_config=None):
   def create_question():
     try:
       body = request.get_json()
+      # if search term found 
+      title = body.get('searchTerm', None)
+      if title:
+        # get questions based in search term
+        questions = Question.query.filter(Question.question.ilike('%'+title+'%')).all()
+        formatted_questions = format_data(questions)
+        
+        return jsonify({
+          'success': True,
+          'questions': formatted_questions
+        })
+
+      # if the request for creating a new item
       new_question = Question(
         question=body.get('question'),
         answer=body.get('answer'),
