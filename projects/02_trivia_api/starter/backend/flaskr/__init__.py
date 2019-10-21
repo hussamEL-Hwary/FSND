@@ -35,7 +35,7 @@ def create_app(test_config=None):
   @app.route('/categories')
   def categories():
     categories = Category.query.all()
-    formatted_categories = [(category.id, category.type) for category in categories]
+    formatted_categories = format_data(categories)
     return jsonify({
       'success': True,
       'categories': formatted_categories
@@ -108,26 +108,20 @@ def create_app(test_config=None):
       })
     except:
       abort(400)
-    
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
 
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
+  @app.route('/categories/<int:category_id>/questions')
+  def get_category_questions(category_id):
+    category = Category.query.filter_by(id=category_id).one_or_none()
+    if not category:
+      abort(404)
 
-  '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  '''
+    # get all question by category
+    questions = Question.query.filter_by(category=category_id)
+    formatted_questions = format_data(questions)
+    return jsonify({
+      'sucess': True,
+      'questions': formatted_questions
+    })
 
 
   '''
