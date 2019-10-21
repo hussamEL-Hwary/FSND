@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import random
+import random 
 
 from models import setup_db, Question, Category
 
@@ -35,25 +35,12 @@ def create_app(test_config=None):
   @app.route('/categories')
   def categories():
     categories = Category.query.all()
-    formatted_categories = format_data(categories)
+    formatted_categories = [(category.id, category.type) for category in categories]
     return jsonify({
       'success': True,
       'categories': formatted_categories
     })
 
-
-  '''
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
-
-  TEST: At this point, when you start the application
-  you should see questions and categories generated,
-  ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
-  '''
   @app.route('/questions')
   def get_questions():
     questions = paginate_questions(request)
@@ -79,14 +66,6 @@ def create_app(test_config=None):
       'current_category': current_category
     })
 
-
-  '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
-
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
-  '''
   @app.route('/questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
     question = Question.query.filter_by(id=question_id).one_or_none()
@@ -99,19 +78,24 @@ def create_app(test_config=None):
       'suceess': True
     })
 
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    try:
+      body = request.get_json()
+      new_question = Question(
+        question=body.get('question'),
+        answer=body.get('answer'),
+        category=body.get('category'),
+        difficulty=int(body.get('difficulty'))
+      )
 
-
-  '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
-
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  '''
-
+      new_question.insert()
+      return jsonify({
+        'sucess': True
+      })
+    except:
+      abort(400)
+    
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
