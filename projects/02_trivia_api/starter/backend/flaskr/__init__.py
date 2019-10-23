@@ -169,10 +169,39 @@ def create_app(test_config=None):
     })
 
   '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
+  error handlers for all expected errors  
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 404,
+      'message': "Not Found"
+    }), 404
+  
+  @app.errorhandler(422)
+  def un_processable_entitiy(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': "un processable entitiy"
+    }), 422
+  
+  @app.errorhandler(400)
+  def bad_request(error):
+    return jsonify({
+      'success': False,
+      'error': 400,
+      'message': "bad request"
+    }), 400
+
+  @app.errorhandler(500)
+  def internal_error(error):
+    return jsonify({
+      'success': False,
+      'error': 500,
+      'message': "internal server error"
+    }), 500
   
   return app
 
