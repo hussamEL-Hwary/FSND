@@ -35,7 +35,9 @@ def create_app(test_config=None):
   @app.route('/categories')
   def categories():
     categories = Category.query.all()
-    formatted_categories = format_data(categories)
+    formatted_categories = {}
+    for category in categories:
+      formatted_categories[category.id] = category.type
     return jsonify({
       'success': True,
       'categories': formatted_categories
@@ -52,7 +54,9 @@ def create_app(test_config=None):
     
     # get categories
     categories = Category.query.all()
-    formatted_categories = [(category.id, category.type) for category in categories]
+    formatted_categories = {}
+    for category in categories:
+      formatted_categories[category.id] = category.type
 
     total_question = len(Question.query.all())
 
@@ -135,6 +139,34 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def get_quiz_question():
+    body = request.get_json()
+    category = body.get('quiz_category', None)
+    previous_questions = body.get('previous_questions')
+   
+    if category['id'] != 0:
+      # get category and all its questions
+      categorydb = Category.query.filter_by(id=category['id']).one_or_none()
+      if not category:
+        abort(404)
+      questions = Question.query.filter_by(category=categorydb.id)
+    else:
+      questions = Question.query.all()
+    remaining_question = []
+    for question in questions:
+      found = False
+      for prev in previous_questions:
+        if prev==question.id:
+          found=True
+          break
+      if not found:
+        remaining_question.append(question)
+    random_index = random.randint(0, len(remaining_question)-1)
+    return jsonify({
+      'sucess': True,
+      'question': remaining_question[random_index].format()
+    })
 
   '''
   @TODO: 
